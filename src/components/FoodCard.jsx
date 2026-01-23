@@ -2,8 +2,12 @@ import React from 'react';
 import { Plus, Star } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
+import { useAuth } from '../context/AuthContext';
+
 const FoodCard = ({ item }) => {
     const { addToCart } = useCart();
+    const { userRole } = useAuth();
+    const isRestaurant = userRole === 'restaurant';
 
     return (
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group border border-transparent dark:border-slate-700">
@@ -31,11 +35,21 @@ const FoodCard = ({ item }) => {
                 <p className="text-gray-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">{item.description}</p>
 
                 <button
-                    onClick={() => addToCart(item)}
-                    className="w-full bg-gray-900 dark:bg-primary text-white py-2.5 rounded-xl font-medium hover:bg-black dark:hover:bg-red-600 active:scale-95 transition-all flex items-center justify-center gap-2 group/btn"
+                    onClick={() => !isRestaurant && addToCart(item)}
+                    disabled={isRestaurant}
+                    className={`w-full py-2.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 group/btn ${isRestaurant
+                            ? 'bg-gray-200 dark:bg-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed'
+                            : 'bg-gray-900 dark:bg-primary text-white hover:bg-black dark:hover:bg-red-600 active:scale-95'
+                        }`}
                 >
-                    <Plus className="h-4 w-4 group-hover/btn:rotate-90 transition-transform" />
-                    Add to Cart
+                    {isRestaurant ? (
+                        'Restaurant Account'
+                    ) : (
+                        <>
+                            <Plus className="h-4 w-4 group-hover/btn:rotate-90 transition-transform" />
+                            Add to Cart
+                        </>
+                    )}
                 </button>
             </div>
         </div>

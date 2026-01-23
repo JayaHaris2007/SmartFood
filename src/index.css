@@ -67,6 +67,12 @@ body {
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+
+/* Hide Leaflet Routing Machine instructions */
+.leaflet-routing-container {
+  display: none !important;
+}
+
+.leaflet-control-container .leaflet-routing-container-hide {
+  display: none;
 }

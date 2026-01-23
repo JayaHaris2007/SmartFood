@@ -3,10 +3,12 @@ import { Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useOrder } from '../context/OrderContext';
+import { useAuth } from '../context/AuthContext';
 
 const Cart = () => {
     const { cart, removeFromCart, updateQuantity, clearCart, totalPrice } = useCart();
     const { placeOrder } = useOrder();
+    const { userRole } = useAuth();
     const navigate = useNavigate();
 
     const handleCheckout = () => {
@@ -96,16 +98,24 @@ const Cart = () => {
                             </div>
                         </div>
 
-                        <button
-                            onClick={handleCheckout}
-                            className="w-full py-4 bg-gray-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:bg-black dark:hover:bg-gray-200 transition-all flex items-center justify-center gap-2 group"
-                        >
-                            Checkout & Start Trek
-                            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                        </button>
-                        <p className="text-xs text-gray-400 dark:text-slate-500 text-center mt-4">
-                            By checking out, you agree to enable location tracking for your order.
-                        </p>
+                        {userRole === 'restaurant' ? (
+                            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl text-center text-sm font-medium">
+                                Restaurant accounts cannot place orders.
+                            </div>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={handleCheckout}
+                                    className="w-full py-4 bg-gray-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:bg-black dark:hover:bg-gray-200 transition-all flex items-center justify-center gap-2 group"
+                                >
+                                    Checkout & Start Trek
+                                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                </button>
+                                <p className="text-xs text-gray-400 dark:text-slate-500 text-center mt-4">
+                                    By checking out, you agree to enable location tracking for your order.
+                                </p>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

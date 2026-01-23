@@ -1,6 +1,7 @@
 import React from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import ActiveOrderTracker from './ActiveOrderTracker';
 
 const Layout = ({ children }) => {
     return (
@@ -9,6 +10,7 @@ const Layout = ({ children }) => {
             <main className="flex-grow">
                 {children}
             </main>
+            <ActiveOrderTracker />
             <Footer />
         </div>
     );

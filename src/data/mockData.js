@@ -2,7 +2,7 @@ export const foodItems = [
     {
         id: 1,
         name: "Classic Margherita",
-        category: "Pizza",
+        category: "Starter",
         price: 12.99,
         description: "Fresh tomato sauce, mozzarella cheese, and basil.",
         image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=500&q=80",
@@ -20,7 +20,7 @@ export const foodItems = [
     {
         id: 3,
         name: "Pepperoni Feast",
-        category: "Pizza",
+        category: "Starter",
         price: 14.99,
         description: "Loaded with spicy pepperoni and extra mozzarella.",
         image: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=500&q=80",
@@ -56,7 +56,7 @@ export const foodItems = [
     {
         id: 7,
         name: "Veggie Supreme",
-        category: "Pizza",
+        category: "Starter",
         price: 13.99,
         description: "Bell peppers, onions, mushrooms, olives, tomatoes.",
         image: "https://images.unsplash.com/photo-1571407970349-bc16f4775778?auto=format&fit=crop&w=500&q=80",

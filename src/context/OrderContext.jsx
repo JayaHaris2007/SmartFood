@@ -31,20 +31,23 @@ export const OrderProvider = ({ children }) => {
 
         // Ideally we need an index for the above query. 
         // Simplification for prototype: Listen to all user's orders sort by date, pick first active.
+        // Listen to all user's orders (without specific sort to avoid index issues in dev)
         const qSimple = query(
             collection(db, "orders"),
-            where("userId", "==", currentUser.uid),
-            orderBy("createdAt", "desc"),
-            limit(1)
+            where("userId", "==", currentUser.uid)
         );
 
         const unsubscribe = onSnapshot(qSimple, (snapshot) => {
             if (!snapshot.empty) {
-                const docData = snapshot.docs[0].data();
-                const docId = snapshot.docs[0].id;
+                // Client-side sort to get the latest
+                const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                const latestOrder = orders[0];
+
                 // Check if it's actually active
-                if (docData.status !== 'Completed' && docData.status !== 'Delivered') {
-                    setActiveOrder({ id: docId, ...docData });
+                if (latestOrder.status !== 'Completed' && latestOrder.status !== 'Delivered') {
+                    setActiveOrder(latestOrder);
                 } else {
                     setActiveOrder(null);
                 }
@@ -78,15 +81,20 @@ export const OrderProvider = ({ children }) => {
 
         const newDistance = Math.max(0, parseFloat((currentDist - 0.5).toFixed(1)));
         const isApproaching = newDistance <= 2.0;
+        const newStatus = newDistance === 0 ? 'Arrived' : activeOrder.status;
 
         await updateDoc(doc(db, "orders", activeOrder.id), {
             distanceKm: newDistance,
-            isApproaching: isApproaching
+            isApproaching: isApproaching,
+            status: newStatus
         });
     };
 
     const placeOrder = async (items, total) => {
         if (!currentUser) return; // Should be protected
+
+        // Extract restaurantId from the first item (assuming single restaurant ordering)
+        const restaurantId = items.length > 0 ? items[0].restaurantId : null;
 
         await addDoc(collection(db, "orders"), {
             userId: currentUser.uid,
@@ -96,7 +104,8 @@ export const OrderProvider = ({ children }) => {
             status: 'On the way',
             distanceKm: 5.0,
             isApproaching: false,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            restaurantId: restaurantId // Link order to restaurant
         });
         // Snapshot listener will update activeOrder automatically
     };
@@ -118,8 +127,25 @@ export const OrderProvider = ({ children }) => {
         }
     };
 
+    // Update order with real GPS data
+    const updateOrderLocation = async (distanceKm) => {
+        if (!activeOrder) return;
+
+        const isApproaching = distanceKm <= 2.0; // Alert when 2km away
+        const status = distanceKm < 0.1 ? 'Arrived' : activeOrder.status; // Update status if arrived
+
+        // Only update if changed significantly to save writes
+        if (Math.abs(activeOrder.distanceKm - distanceKm) > 0.05 || status !== activeOrder.status) {
+            await updateDoc(doc(db, "orders", activeOrder.id), {
+                distanceKm: distanceKm,
+                isApproaching: isApproaching,
+                status: status === 'Arrived' && activeOrder.status !== 'Arrived' ? 'Arrived' : activeOrder.status
+            });
+        }
+    };
+
     return (
-        <OrderContext.Provider value={{ activeOrder, placeOrder, clearOrder, cancelOrder, moveCloser }}>
+        <OrderContext.Provider value={{ activeOrder, placeOrder, clearOrder, cancelOrder, moveCloser, updateOrderLocation }}>
             {children}
         </OrderContext.Provider>
     );

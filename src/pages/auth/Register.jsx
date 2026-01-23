@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ChefHat } from 'lucide-react';
+import MapComponent from '../../components/MapComponent';
+import { ChefHat, MapPin } from 'lucide-react';
 
 const Register = () => {
     const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ const Register = () => {
     const [name, setName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [role, setRole] = useState('user'); // Default to 'user'
+    const [selectedLocation, setSelectedLocation] = useState(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -31,7 +33,7 @@ const Register = () => {
             setError('');
             setLoading(true);
             setLoading(true);
-            await register(email, password, role, name, phoneNumber); // Pass selected role and new fields
+            await register(email, password, role, name, phoneNumber, selectedLocation); // Pass selected role and new fields
             navigate('/');
         } catch (err) {
             setError('Failed to create an account.');
@@ -43,9 +45,15 @@ const Register = () => {
         try {
             setError('');
             setLoading(true);
-            await loginWithGoogle();
+            // Pass the selected role AND the form data
+            await loginWithGoogle(role, {
+                name,
+                phoneNumber,
+                location: selectedLocation
+            });
             navigate('/');
         } catch (err) {
+            console.error(err);
             setError('Failed to sign up with Google.');
         }
         setLoading(false);
@@ -192,6 +200,31 @@ const Register = () => {
                             </div>
                         </div>
 
+                        {role === 'restaurant' && (
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 flex items-center gap-2">
+                                    <MapPin className="h-4 w-4" />
+                                    Restaurant Location
+                                </label>
+                                <p className="text-xs text-slate-500">Tap on the map to set your location.</p>
+                                <div className="h-64 sticky-map-container rounded-lg overflow-hidden border border-gray-300 dark:border-slate-600">
+                                    <MapComponent
+                                        isEditable={true}
+                                        onLocationSelect={setSelectedLocation}
+                                        selectedLocation={selectedLocation}
+                                        zoom={12}
+                                    />
+                                </div>
+                                {selectedLocation ? (
+                                    <p className="text-xs text-green-600 flex items-center gap-1">
+                                        <MapPin className="h-3 w-3" /> Location selected
+                                    </p>
+                                ) : (
+                                    <p className="text-xs text-red-500">* Location is required for restaurants</p>
+                                )}
+                            </div>
+                        )}
+
                         <div>
                             <button
                                 type="submit"
@@ -203,29 +236,31 @@ const Register = () => {
                         </div>
                     </form>
 
-                    <div className="mt-6">
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300 dark:border-slate-600" />
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400">
-                                    Or continue with
-                                </span>
-                            </div>
-                        </div>
-
+                    {role === 'user' && (
                         <div className="mt-6">
-                            <button
-                                onClick={handleGoogleLogin}
-                                disabled={loading}
-                                className="w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
-                            >
-                                <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="h-5 w-5 mr-2" alt="Google" />
-                                Sign up with Google
-                            </button>
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-300 dark:border-slate-600" />
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400">
+                                        Or continue with
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="mt-6">
+                                <button
+                                    onClick={handleGoogleLogin}
+                                    disabled={loading}
+                                    className="w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
+                                >
+                                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="h-5 w-5 mr-2" alt="Google" />
+                                    Sign up with Google
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

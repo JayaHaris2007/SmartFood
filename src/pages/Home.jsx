@@ -2,10 +2,30 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock, Star } from 'lucide-react';
 import FoodCard from '../components/FoodCard';
-import { foodItems } from '../data/mockData';
+import { db } from '../lib/firebase';
+import { collection, query, where, limit, getDocs } from 'firebase/firestore';
 
 const Home = () => {
-    const featuredItems = foodItems.slice(0, 3);
+    const [featuredItems, setFeaturedItems] = React.useState([]);
+
+    React.useEffect(() => {
+        const fetchRestaurants = async () => {
+            try {
+                // Fetch restaurants (users with role 'restaurant')
+                const q = query(
+                    collection(db, "users"),
+                    where("role", "==", "restaurant"),
+                    limit(6)
+                );
+                const snapshot = await getDocs(q);
+                setFeaturedItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            } catch (error) {
+                console.error("Error fetching restaurants:", error);
+            }
+        };
+
+        fetchRestaurants();
+    }, []);
 
     return (
         <div className="space-y-16 pb-12">
@@ -58,22 +78,55 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* Featured Items */}
+            {/* Restaurants Grid */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-end mb-8">
                     <div>
-                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Popular This Week</h2>
-                        <p className="text-gray-500 dark:text-slate-400">Most ordered items by our community</p>
+                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Popular Restaurants</h2>
+                        <p className="text-gray-500 dark:text-slate-400">Order from the best places near you</p>
                     </div>
-                    <Link to="/menu" className="hidden md:flex items-center gap-2 text-primary font-medium hover:underline">
-                        See all <ArrowRight className="h-4 w-4" />
-                    </Link>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {featuredItems.map(item => (
-                        <FoodCard key={item.id} item={item} />
+                    {featuredItems.map(restaurant => (
+                        <Link
+                            key={restaurant.id}
+                            to={`/restaurant/${restaurant.id}`}
+                            className="group block bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-slate-700"
+                        >
+                            {/* Placeholder Cover Image */}
+                            <div className="h-48 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 relative flex items-center justify-center">
+                                <span className="text-6xl font-black text-white/20 select-none">
+                                    {restaurant.name?.charAt(0) || 'R'}
+                                </span>
+                                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
+                            </div>
+
+                            <div className="p-6">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-primary transition-colors">
+                                    {restaurant.name || "Restaurant"}
+                                </h3>
+                                <div className="flex flex-col gap-2 text-sm text-gray-500 dark:text-slate-400">
+                                    <div className="flex items-center gap-2">
+                                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                                        <span className="font-medium text-gray-900 dark:text-white">4.5</span>
+                                        <span>• 25-30 mins</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-bold uppercase tracking-wide">
+                                            Promoted
+                                        </div>
+                                        <span>• Fast Food, American</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </Link>
                     ))}
+                    {featuredItems.length === 0 && (
+                        <div className="col-span-full py-12 text-center text-gray-500 dark:text-slate-400">
+                            No restaurants found. Be the first to join!
+                        </div>
+                    )}
                 </div>
             </section>
         </div>

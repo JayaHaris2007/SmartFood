@@ -1,95 +1,83 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../lib/firebase';
-import { collection, query, where, onSnapshot, orderBy, updateDoc, doc, addDoc, deleteDoc } from 'firebase/firestore';
-import { ChefHat, Bell, Clock, PlusCircle, Trash2 } from 'lucide-react';
+import { collection, query, where, onSnapshot, orderBy, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { ChefHat, PlusCircle, Trash2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import Toast from '../components/Toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const RestaurantDashboard = () => {
-    const [orders, setOrders] = useState([]);
-    const [alerts, setAlerts] = useState([]);
     // Menu state
     const [menuItems, setMenuItems] = useState([]);
     const [newItem, setNewItem] = useState({
         name: '',
-        category: 'Pizza',
+        category: 'Starter',
         price: '',
         description: '',
         image: ''
     });
+    const [toast, setToast] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, itemId: null });
+
+    const { currentUser } = useAuth();
 
     useEffect(() => {
-        // Listen for all active orders
-        const qOrders = query(
-            collection(db, "orders"),
-            where("status", "!=", "Delivered"),
-            orderBy("status"),
-            orderBy("createdAt", "desc")
+        if (!currentUser) return;
+
+        // Listen for menu items for THIS restaurant only
+        const qMenu = query(
+            collection(db, "menuItems"),
+            where("restaurantId", "==", currentUser.uid)
         );
 
-        // Simple query without composite index for orders
-        const qSimpleOrders = query(
-            collection(db, "orders"),
-            orderBy("createdAt", "desc")
-        );
-
-        const unsubscribeOrders = onSnapshot(qSimpleOrders, (snapshot) => {
-            const loadedOrders = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })).filter(o => o.status !== 'Completed'); // Filtering client side for simplicity
-
-            setOrders(loadedOrders);
-
-            // Generate alerts from data
-            const newAlerts = [];
-            loadedOrders.forEach(order => {
-                if (order.isApproaching) {
-                    newAlerts.push({
-                        id: order.id + '_alert',
-                        message: `Order #${order.id.slice(0, 5)}... is approaching! (${order.distanceKm}km)`,
-                        timestamp: new Date().toLocaleTimeString()
-                    });
-                }
-            });
-            setAlerts(newAlerts);
-        });
-
-        // Listen for menu items
-        const qMenu = query(collection(db, "menuItems"), orderBy("createdAt", "desc"));
         const unsubscribeMenu = onSnapshot(qMenu, (snapshot) => {
-            setMenuItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Client-side sort
+            items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            setMenuItems(items);
         });
 
         return () => {
-            unsubscribeOrders();
             unsubscribeMenu();
         };
-    }, []);
+    }, [currentUser]);
 
     const handleAddItem = async (e) => {
         e.preventDefault();
+        if (!currentUser) return;
+
         try {
             await addDoc(collection(db, "menuItems"), {
                 ...newItem,
                 price: parseFloat(newItem.price),
                 rating: 4.5, // Default rating
+                restaurantId: currentUser.uid, // Link item to this restaurant
+                restaurantName: currentUser.name || "Unknown Restaurant",
                 createdAt: new Date().toISOString()
             });
-            setNewItem({ name: '', category: 'Pizza', price: '', description: '', image: '' }); // Reset form
-            alert('Item added successfully!');
+            setNewItem({ name: '', category: 'Starter', price: '', description: '', image: '' }); // Reset form
+            setToast({ message: 'Item added successfully!', type: 'success' });
         } catch (error) {
             console.error("Error adding item: ", error);
-            alert('Failed to add item.');
+            setToast({ message: 'Failed to add item.', type: 'error' });
         }
     };
 
-    const handleDeleteItem = async (id) => {
-        if (window.confirm('Are you sure you want to delete this item?')) {
-            try {
-                await deleteDoc(doc(db, "menuItems", id));
-            } catch (error) {
-                console.error("Error deleting item: ", error);
-                alert('Failed to delete item.');
-            }
+    const confirmDelete = (id) => {
+        setConfirmModal({ isOpen: true, itemId: id });
+    };
+
+    const handleExecuteDelete = async () => {
+        if (!confirmModal.itemId) return;
+
+        try {
+            await deleteDoc(doc(db, "menuItems", confirmModal.itemId));
+            setToast({ message: 'Item deleted successfully.', type: 'success' });
+        } catch (error) {
+            console.error("Error deleting item: ", error);
+            setToast({ message: 'Failed to delete item.', type: 'error' });
+        } finally {
+            setConfirmModal({ isOpen: false, itemId: null });
         }
     };
 
@@ -103,77 +91,14 @@ const RestaurantDashboard = () => {
                         </div>
                         <div>
                             <h1 className="text-3xl font-bold">Restaurant Dashboard</h1>
-                            <p className="text-slate-400">Manage Orders & Menu</p>
+                            <p className="text-slate-400">Manage Menu</p>
                         </div>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                    {/* Left Column: Orders */}
+                    {/* Left Column: Add New Item */}
                     <div className="space-y-8">
-                        {/* Active Order Status */}
-                        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                                <Clock className="h-5 w-5 text-blue-400" />
-                                Active Orders
-                            </h2>
-                            {/* ... Orders List Code (Existing) ... */}
-                            <div className="space-y-4">
-                                {orders.length > 0 ? (
-                                    orders.map(order => (
-                                        <div key={order.id} className="bg-slate-700/50 rounded-xl p-6 border border-slate-600 relative overflow-hidden">
-                                            <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                                            <div className="flex justify-between mb-4">
-                                                <span className="font-mono text-lg font-bold">Order #{order.id.slice(0, 8)}</span>
-                                                <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm">
-                                                    {order.status}
-                                                </span>
-                                            </div>
-                                            <div className="space-y-2 mb-6">
-                                                {order.items.map((item, idx) => (
-                                                    <div key={idx} className="flex justify-between text-slate-300">
-                                                        <span>{item.quantity}x {item.name}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div className="flex items-center justify-between pt-4 border-t border-slate-600">
-                                                <div className="text-sm text-slate-400">
-                                                    Distance: <span className="text-white font-mono">{order.distanceKm} km</span>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    {order.isApproaching && (
-                                                        <span className="text-red-400 font-bold animate-pulse">APPROACHING!</span>
-                                                    )}
-                                                    <button
-                                                        onClick={async (e) => {
-                                                            e.stopPropagation();
-                                                            if (window.confirm('Are you sure you want to cancel this order?')) {
-                                                                await updateDoc(doc(db, "orders", order.id), {
-                                                                    status: 'Cancelled'
-                                                                });
-                                                            }
-                                                        }}
-                                                        className="px-3 py-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg text-xs font-semibold border border-red-500/30 transition-colors"
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-12 text-slate-500">
-                                        No active orders at the moment.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right Column: Menu Management & Alerts */}
-                    <div className="space-y-8">
-                        {/* Add New Item */}
                         <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
                             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                                 <PlusCircle className="h-5 w-5 text-green-400" />
@@ -199,10 +124,10 @@ const RestaurantDashboard = () => {
                                             onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
                                             className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary"
                                         >
-                                            <option value="Pizza">Pizza</option>
-                                            <option value="Burger">Burger</option>
+                                            <option value="Starter">Starter</option>
+                                            <option value="Main Course">Main Course</option>
+                                            <option value="Dessert">Dessert</option>
                                             <option value="Drinks">Drinks</option>
-                                            <option value="Sides">Sides</option>
                                         </select>
                                     </div>
                                     <div>
@@ -248,14 +173,16 @@ const RestaurantDashboard = () => {
                                 </button>
                             </form>
                         </div>
+                    </div>
 
-                        {/* Current Menu Items */}
+                    {/* Right Column: Current Menu */}
+                    <div className="space-y-8">
                         <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
                             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                                 <ChefHat className="h-5 w-5 text-primary" />
                                 Current Menu ({menuItems.length})
                             </h2>
-                            <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
                                 {menuItems.length > 0 ? (
                                     menuItems.map(item => (
                                         <div key={item.id} className="bg-slate-700/30 p-3 rounded-lg flex justify-between items-center group hover:bg-slate-700/50 transition-colors">
@@ -267,7 +194,7 @@ const RestaurantDashboard = () => {
                                                 </div>
                                             </div>
                                             <button
-                                                onClick={() => handleDeleteItem(item.id)}
+                                                onClick={() => confirmDelete(item.id)}
                                                 className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                                                 title="Delete Item"
                                             >
@@ -282,34 +209,25 @@ const RestaurantDashboard = () => {
                                 )}
                             </div>
                         </div>
-
-                        {/* Alerts Feed */}
-                        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                                <Bell className="h-5 w-5 text-primary" />
-                                Alert Log
-                            </h2>
-                            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                {alerts.length > 0 ? (
-                                    alerts.map(alert => (
-                                        <div key={alert.id} className="bg-slate-700/30 p-4 rounded-xl border-l-4 border-primary animate-fade-in">
-                                            <div className="flex justify-between items-start mb-1">
-                                                <span className="font-bold text-red-300">⚠️ Proximity Alert</span>
-                                                <span className="text-xs text-slate-500">{alert.timestamp}</span>
-                                            </div>
-                                            <p className="text-slate-300 text-sm">{alert.message}</p>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-8 text-slate-500 italic">
-                                        Waiting for incoming alerts...
-                                    </div>
-                                )}
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onCancel={() => setConfirmModal({ isOpen: false, itemId: null })}
+                onConfirm={handleExecuteDelete}
+                title="Delete Item"
+                message="Are you sure you want to delete this menu item? This action cannot be undone."
+                confirmText="Delete"
+                isDanger={true}
+            />
         </div>
     );
 };

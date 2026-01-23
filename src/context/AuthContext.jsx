@@ -6,7 +6,7 @@ import {
     onAuthStateChanged,
     signInWithPopup
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../lib/firebase';
 
 const AuthContext = createContext();
@@ -29,35 +29,39 @@ export const AuthProvider = ({ children }) => {
             }
         }, 5000);
 
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (!mounted) return;
 
             if (user) {
-                // Fetch user role from Firestore
-                try {
-                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                // Listen for real-time user updates
+                const unsubscribeUser = onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
                     if (mounted) {
-                        if (userDoc.exists()) {
-                            setUserRole(userDoc.data().role);
+                        if (docSnapshot.exists()) {
+                            const data = docSnapshot.data();
+                            setUserRole(data.role);
+                            setCurrentUser({ ...user, ...data });
                         } else {
+                            // Creates a provisional user state if doc doesn't exist yet
                             setUserRole('user');
+                            setCurrentUser(user);
                         }
-                        setCurrentUser(user);
+                        setLoading(false);
                     }
-                } catch (err) {
-                    console.error("Error fetching user role:", err);
+                }, (error) => {
+                    console.error("Error listening to user data:", error);
                     if (mounted) {
                         setUserRole('user');
                         setCurrentUser(user);
+                        setLoading(false);
                     }
-                }
+                });
             } else {
                 if (mounted) {
                     setCurrentUser(null);
                     setUserRole(null);
+                    setLoading(false);
                 }
             }
-            if (mounted) setLoading(false);
         });
 
         return () => {
@@ -71,22 +75,28 @@ export const AuthProvider = ({ children }) => {
         return signInWithEmailAndPassword(auth, email, password);
     };
 
-    const registerFn = async (email, password, role = 'user', name = '', phoneNumber = '') => {
+    const registerFn = async (email, password, role = 'user', name = '', phoneNumber = '', location = null) => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         // Create user profile in Firestore
-        await setDoc(doc(db, "users", user.uid), {
+        const userData = {
             email: user.email,
             role: role, // Use selected role
             name: name,
             phoneNumber: phoneNumber,
             createdAt: new Date().toISOString()
-        });
+        };
+
+        if (location) {
+            userData.location = location;
+        }
+
+        await setDoc(doc(db, "users", user.uid), userData);
         setUserRole(role);
         return userCredential;
     };
 
-    const loginWithGoogle = async () => {
+    const loginWithGoogle = async (requestedRole = 'user', additionalData = {}) => {
         const result = await signInWithPopup(auth, googleProvider);
         const user = result.user;
 
@@ -95,14 +105,27 @@ export const AuthProvider = ({ children }) => {
         const userDoc = await getDoc(userDocRef);
 
         if (!userDoc.exists()) {
-            await setDoc(userDocRef, {
+            // New user: Create with requested role and additional data
+            const userData = {
                 email: user.email,
-                role: 'user',
+                role: requestedRole,
+                name: additionalData.name || user.displayName || '',
+                phoneNumber: additionalData.phoneNumber || '',
                 createdAt: new Date().toISOString()
-            });
-            setUserRole('user');
+            };
+
+            if (additionalData.location) {
+                userData.location = additionalData.location;
+            }
+
+            await setDoc(userDocRef, userData);
+            setUserRole(requestedRole);
+            setCurrentUser({ ...user, ...userData });
         } else {
-            setUserRole(userDoc.data().role);
+            // Existing user: Ignore requested role/data, use existing
+            const data = userDoc.data();
+            setUserRole(data.role);
+            setCurrentUser({ ...user, ...data });
         }
         return result;
     };
