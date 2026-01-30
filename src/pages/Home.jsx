@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock, Star } from 'lucide-react';
 import FoodCard from '../components/FoodCard';
 import { db } from '../lib/firebase';
 import { collection, query, where, limit, getDocs, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
-import RestaurantDashboard from './RestaurantDashboard';
+import Loading from '../components/Loading';
+
+// Lazy load the dashboard to avoid loading Map/Leaflet on home page
+const RestaurantDashboard = lazy(() => import('./RestaurantDashboard'));
 
 const Home = () => {
     const { userRole } = useAuth();
@@ -43,14 +46,22 @@ const Home = () => {
     return (
         <>
             {userRole === 'restaurant' ? (
-                <RestaurantDashboard />
+                <Suspense fallback={<Loading />}>
+                    <RestaurantDashboard />
+                </Suspense>
             ) : (
                 <div className="space-y-16 pb-12">
                     {/* Hero Section */}
                     <section className="relative h-[500px] flex items-center justify-center overflow-hidden">
                         <div className="absolute inset-0 bg-black/60 z-10" />
                         <img
-                            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=80"
+                            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=60"
+                            srcSet="
+                                https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=640&q=60 640w,
+                                https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1024&q=60 1024w,
+                                https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=60 1600w
+                            "
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1600px"
                             alt="Delicious variety of food on a table"
                             className="absolute inset-0 w-full h-full object-cover"
                             fetchPriority="high"
