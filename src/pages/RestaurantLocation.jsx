@@ -40,17 +40,17 @@ const RestaurantLocation = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 text-slate-100 p-8">
+        <div className="text-gray-900 dark:text-slate-100 p-8">
             <div className="max-w-4xl mx-auto">
                 <h1 className="text-3xl font-bold mb-8 flex items-center gap-3">
                     <MapPin className="h-8 w-8 text-primary" />
                     Location Settings
                 </h1>
 
-                <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                    <p className="text-slate-400 text-sm mb-6">Set your restaurant's location so customers can find you accurately on the map.</p>
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm">
+                    <p className="text-gray-500 dark:text-slate-400 text-sm mb-6">Set your restaurant's location so customers can find you accurately on the map.</p>
 
-                    <div className="h-[400px] rounded-xl overflow-hidden mb-6 border border-slate-600 shadow-inner">
+                    <div className="h-[400px] rounded-xl overflow-hidden mb-6 border border-gray-200 dark:border-slate-600 shadow-inner">
                         <MapComponent
                             isEditable={true}
                             onLocationSelect={setRestaurantLocation}

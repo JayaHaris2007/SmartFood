@@ -41,7 +41,7 @@ const Navbar = () => {
                     <div className="hidden md:flex items-center space-x-8">
                         {userRole === 'restaurant' ? (
                             <>
-                                <Link to="/dashboard" className={isActive('/dashboard')}>Dashboard</Link>
+                                <Link to="/dashboard/menu" className={isActive('/dashboard/menu')}>Menu</Link>
                                 <Link to="/dashboard/orders" className={isActive('/dashboard/orders')}>Orders</Link>
                                 <Link to="/dashboard/map" className={isActive('/dashboard/map')}>Map</Link>
                                 <Link to="/dashboard/income" className={isActive('/dashboard/income')}>Income</Link>
@@ -50,6 +50,7 @@ const Navbar = () => {
                             <>
                                 <Link to="/" className={isActive('/')}>Home</Link>
                                 <Link to="/menu" className={isActive('/menu')}>Restaurants</Link>
+                                <Link to="/map" className={isActive('/map')}>Map</Link>
                             </>
                         )}
                     </div>
@@ -127,7 +128,7 @@ const Navbar = () => {
                     <div className="px-4 pt-2 pb-3 space-y-1 sm:px-3">
                         {userRole === 'restaurant' ? (
                             <>
-                                <Link to="/dashboard" className={`block px-3 py-2 rounded-md text-base font-medium ${isActive('/dashboard')}`}>Dashboard</Link>
+                                <Link to="/dashboard/menu" className={`block px-3 py-2 rounded-md text-base font-medium ${isActive('/dashboard/menu')}`}>Menu</Link>
                                 <Link to="/dashboard/orders" className={`block px-3 py-2 rounded-md text-base font-medium ${isActive('/dashboard/orders')}`}>Orders</Link>
                                 <Link to="/dashboard/map" className={`block px-3 py-2 rounded-md text-base font-medium ${isActive('/dashboard/map')}`}>Map</Link>
                                 <Link to="/dashboard/income" className={`block px-3 py-2 rounded-md text-base font-medium ${isActive('/dashboard/income')}`}>Income</Link>
@@ -136,6 +137,7 @@ const Navbar = () => {
                             <>
                                 <Link to="/" className={`block px-3 py-2 rounded-md text-base font-medium ${isActive('/')}`}>Home</Link>
                                 <Link to="/menu" className={`block px-3 py-2 rounded-md text-base font-medium ${isActive('/menu')}`}>Restaurants</Link>
+                                <Link to="/map" className={`block px-3 py-2 rounded-md text-base font-medium ${isActive('/map')}`}>Map</Link>
                             </>
                         )}
 

@@ -35,11 +35,11 @@ const MapPage = () => {
     }, []);
 
     return (
-        <div className="min-h-screen pt-16 bg-slate-900 relative">
+        <div className="min-h-screen pt-16 bg-gray-50 dark:bg-slate-900 relative">
             {/* Floating Header */}
-            <div className="absolute top-24 left-4 z-10 bg-black/80 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/10 shadow-2xl">
-                <h1 className="text-2xl font-bold text-white mb-1">Live Map</h1>
-                <p className="text-gray-400 text-sm">Tracking active deliveries</p>
+            <div className="absolute top-24 left-4 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md px-6 py-4 rounded-2xl border border-gray-200 dark:border-white/10 shadow-2xl">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Live Map</h1>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Tracking active deliveries</p>
             </div>
 
             <div className="h-[calc(100vh-64px)] w-full">

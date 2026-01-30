@@ -6,7 +6,7 @@ import { collection, query, where, limit, getDocs, doc, getDoc } from 'firebase/
 import { db } from '../lib/firebase';
 
 const ActiveOrderTracker = () => {
-    const { activeOrder, moveCloser, clearOrder, cancelOrder, updateOrderLocation } = useOrder();
+    const { activeOrder, moveCloser, clearOrder, cancelOrder, updateOrderLocation, dismissOrder } = useOrder();
     const navigate = useNavigate();
     const [restaurantLocation, setRestaurantLocation] = React.useState(null);
     const [loadingLocation, setLoadingLocation] = React.useState(false);
@@ -100,27 +100,39 @@ const ActiveOrderTracker = () => {
     return (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[5000] w-[90%] max-w-md animate-slide-up">
             {/* Glassmorphic Container */}
-            <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-3xl p-5 shadow-2xl text-white overflow-hidden relative">
+            <div className="bg-white/90 dark:bg-black/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-3xl p-5 shadow-2xl text-gray-900 dark:text-white overflow-hidden relative">
 
                 {/* Background Progress Bar */}
-                <div className="absolute top-0 left-0 h-1 w-full bg-white/10">
+                <div className="absolute top-0 left-0 h-1 w-full bg-gray-200 dark:bg-white/10">
                     <div
                         className="h-full bg-gradient-to-r from-primary to-orange-500 transition-all duration-700 ease-out"
                         style={{ width: `${progress}%` }}
                     />
                 </div>
 
-                <div className="flex items-center justify-between mb-4 mt-2">
-                    <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-full ${activeOrder.status === 'Arrived' ? 'bg-green-500/20 text-green-400' : 'bg-primary/20 text-primary'}`}>
-                            <Navigation className="h-5 w-5" />
+                <div className="flex items-center justify-between mb-6 mt-4 relative z-10">
+                    <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-2xl shadow-lg border border-white/10 ${activeOrder.status === 'Arrived' ? 'bg-green-500 text-white' : 'bg-primary text-white'}`}>
+                            {activeOrder.status === 'Arrived' ? <CheckCircle className="h-6 w-6" /> : <Navigation className="h-6 w-6" />}
                         </div>
                         <div>
-                            <h4 className="font-bold text-lg leading-none mb-1">
-                                {activeOrder.status === 'Arrived' ? 'You reached successfully!' : activeOrder.isApproaching ? 'Approaching...' : 'On the way'}
-                            </h4>
-                            <p className="text-xs text-slate-300 font-medium tracking-wide opacity-80 uppercase">
-                                {activeOrder.status === 'Arrived' ? 'Enjoy your meal' : `${activeOrder.distanceKm} km remaining`}
+                            <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-black text-xl tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-slate-400">
+                                    {activeOrder.status === 'Arrived' ? 'Arrived!' : activeOrder.isApproaching ? 'Approaching...' : 'On the way'}
+                                </h4>
+                                <span className="text-[10px] px-2 py-0.5 bg-gray-100 dark:bg-slate-700/50 rounded-md font-mono text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-600">
+                                    #{activeOrder.id.slice(0, 6)}
+                                </span>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-slate-400 font-bold tracking-wide uppercase flex items-center gap-1.5">
+                                {activeOrder.status === 'Arrived' ? (
+                                    <span className="text-green-500">Pick up your order</span>
+                                ) : (
+                                    <>
+                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                        {activeOrder.distanceKm} km remaining
+                                    </>
+                                )}
                             </p>
                         </div>
                     </div>
@@ -129,8 +141,8 @@ const ActiveOrderTracker = () => {
                 {/* Actions Grid */}
                 {activeOrder.status === 'Cancelled' ? (
                     <button
-                        onClick={clearOrder}
-                        className="w-full py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl font-bold transition-all"
+                        onClick={dismissOrder}
+                        className="w-full py-3 bg-red-500/20 hover:bg-red-500/30 text-red-600 dark:text-red-400 rounded-xl font-bold transition-all"
                     >
                         Dismiss Cancelled Order
                     </button>
@@ -148,7 +160,7 @@ const ActiveOrderTracker = () => {
                                 onClick={() => {
                                     navigate('/map', { state: { routeTo: restaurantLocation } });
                                 }}
-                                className="col-span-2 py-3 bg-white text-black rounded-xl font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                                className="col-span-2 py-3 bg-gray-100 dark:bg-white text-gray-900 dark:text-black rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
                             >
                                 <MapPin className="h-4 w-4" />
                                 Track on Map
@@ -168,7 +180,7 @@ const ActiveOrderTracker = () => {
 
                         <button
                             onClick={() => setShowCancelConfirm(true)}
-                            className="py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl font-medium transition-colors text-sm"
+                            className="py-3 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl font-medium transition-colors text-sm"
                         >
                             Cancel
                         </button>
@@ -177,13 +189,13 @@ const ActiveOrderTracker = () => {
 
                 {/* Cancel Confirmation Modal */}
                 {showCancelConfirm && (
-                    <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-6 animate-fade-in">
-                        <h4 className="text-lg font-bold text-white mb-2 text-center">Cancel Order?</h4>
-                        <p className="text-sm text-slate-400 text-center mb-6">Are you sure you want to cancel? This action cannot be undone.</p>
+                    <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-6 animate-fade-in">
+                        <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2 text-center">Cancel Order?</h4>
+                        <p className="text-sm text-gray-500 dark:text-slate-400 text-center mb-6">Are you sure you want to cancel? This action cannot be undone.</p>
                         <div className="flex w-full gap-3">
                             <button
                                 onClick={() => setShowCancelConfirm(false)}
-                                className="flex-1 py-2 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 transition-colors"
+                                className="flex-1 py-2 rounded-lg bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-white font-medium hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
                             >
                                 No
                             </button>

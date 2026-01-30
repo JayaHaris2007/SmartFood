@@ -19,19 +19,7 @@ export const OrderProvider = ({ children }) => {
             return;
         }
 
-        const q = query(
-            collection(db, "orders"),
-            where("userId", "==", currentUser.uid),
-            where("status", "!=", "Delivered"), // Only active orders
-            orderBy("status"), // Required for inequality filter composite index (or simple match) - actually Firestore requires orderBy field to match inequality filter first or be mindful. 
-            // Simpler: Just get recent and filter in client if needed, or:
-            // where("status", "in", ["On the way", "Arrived"])
-            limit(1)
-        );
-
-        // Ideally we need an index for the above query. 
         // Simplification for prototype: Listen to all user's orders sort by date, pick first active.
-        // Listen to all user's orders (without specific sort to avoid index issues in dev)
         const qSimple = query(
             collection(db, "orders"),
             where("userId", "==", currentUser.uid)
@@ -43,14 +31,17 @@ export const OrderProvider = ({ children }) => {
                 const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-                const latestOrder = orders[0];
+                // Find the first relevant order:
+                // - Not dismissed by user
+                // - Status is one of: On the way, Arrived, Cancelled
+                // - NOT Completed (unless we wanted to show history, but usually we don't track completed)
+                // - NOT Delivered (legacy)
+                const latestRelevant = orders.find(o =>
+                    !o.userDismissed &&
+                    (o.status === 'On the way' || o.status === 'Arrived' || o.status === 'Cancelled')
+                );
 
-                // Check if it's actually active
-                if (latestOrder.status !== 'Completed' && latestOrder.status !== 'Delivered') {
-                    setActiveOrder(latestOrder);
-                } else {
-                    setActiveOrder(null);
-                }
+                setActiveOrder(latestRelevant || null);
             } else {
                 setActiveOrder(null);
             }
@@ -59,11 +50,7 @@ export const OrderProvider = ({ children }) => {
         return () => unsubscribe();
     }, [currentUser]);
 
-    // Listen for alerts (orders approaching) - this is for specific client simulation
-    // In a real app, the dashboard listens, but here we simulate 'alerts' if we were the restaurant?
-    // Actually the OrderContext Mock showed 'restaurantAlerts'. The Dashboard uses them.
-    // We should let the Dashboard listen for alerts directly from Firestore orders.
-    // So this context assumes 'Client' role mainly, but 'moveCloser' is a simulation tool.
+    // ... (moveCloser remains same)
 
     // Simulate GPS movement (updates Firestore)
     const moveCloser = async () => {
@@ -91,33 +78,45 @@ export const OrderProvider = ({ children }) => {
     };
 
     const placeOrder = async (items, total) => {
-        if (!currentUser) return; // Should be protected
+        if (!currentUser) return;
 
-        // Extract restaurantId from the first item (assuming single restaurant ordering)
         const restaurantId = items.length > 0 ? items[0].restaurantId : null;
 
         await addDoc(collection(db, "orders"), {
             userId: currentUser.uid,
             userEmail: currentUser.email,
+            userName: currentUser.name || currentUser.displayName || 'Guest',
+            customerName: currentUser.name || currentUser.displayName || 'Guest',
             items,
             total,
             status: 'On the way',
             distanceKm: 5.0,
             isApproaching: false,
             createdAt: new Date().toISOString(),
-            restaurantId: restaurantId // Link order to restaurant
+            restaurantId: restaurantId,
+            userDismissed: false // Initialize as not dismissed
         });
-        // Snapshot listener will update activeOrder automatically
     };
 
     const clearOrder = async () => {
         // Mark as delivered/completed
         if (activeOrder) {
             await updateDoc(doc(db, "orders", activeOrder.id), {
-                status: 'Completed'
+                status: 'Completed',
+                userDismissed: true // Also dismiss it so it clears from tracker instantly
             });
         }
     };
+
+    const dismissOrder = async () => {
+        if (activeOrder) {
+            await updateDoc(doc(db, "orders", activeOrder.id), {
+                userDismissed: true
+            });
+        }
+    };
+
+
 
     const cancelOrder = async () => {
         if (activeOrder) {
@@ -145,7 +144,7 @@ export const OrderProvider = ({ children }) => {
     };
 
     return (
-        <OrderContext.Provider value={{ activeOrder, placeOrder, clearOrder, cancelOrder, moveCloser, updateOrderLocation }}>
+        <OrderContext.Provider value={{ activeOrder, placeOrder, clearOrder, cancelOrder, moveCloser, updateOrderLocation, dismissOrder }}>
             {children}
         </OrderContext.Provider>
     );

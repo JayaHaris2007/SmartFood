@@ -34,32 +34,32 @@ const RestaurantIncome = () => {
     const avgOrder = orders.length > 0 ? totalRevenue / orders.length : 0;
 
     return (
-        <div className="min-h-screen bg-slate-900 text-slate-100 p-8">
+        <div className="text-gray-900 dark:text-slate-100 p-8">
             <div className="max-w-4xl mx-auto">
                 <h1 className="text-3xl font-bold mb-8 flex items-center gap-2">
-                    <span className="text-green-400 text-4xl">$</span>
+                    <span className="text-green-500 text-4xl">$</span>
                     Income & Stats
                 </h1>
 
-                <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-gray-200 dark:border-slate-700 shadow-sm">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-slate-700/50 p-6 rounded-xl">
-                            <p className="text-slate-400 text-sm mb-1">Total Revenue</p>
-                            <p className="text-4xl font-bold text-white">${totalRevenue.toFixed(2)}</p>
-                            <p className="text-xs text-green-400 mt-2">+12% this week</p>
+                        <div className="bg-gray-50 dark:bg-slate-700/50 p-6 rounded-xl border border-gray-100 dark:border-transparent">
+                            <p className="text-gray-500 dark:text-slate-400 text-sm mb-1">Total Revenue</p>
+                            <p className="text-4xl font-bold text-gray-900 dark:text-white">${totalRevenue.toFixed(2)}</p>
+                            <p className="text-xs text-green-500 mt-2">+12% this week</p>
                         </div>
-                        <div className="bg-slate-700/50 p-6 rounded-xl">
-                            <p className="text-slate-400 text-sm mb-1">Total Orders</p>
-                            <p className="text-4xl font-bold text-white">{orders.length}</p>
-                            <p className="text-xs text-blue-400 mt-2">Lifetime</p>
+                        <div className="bg-gray-50 dark:bg-slate-700/50 p-6 rounded-xl border border-gray-100 dark:border-transparent">
+                            <p className="text-gray-500 dark:text-slate-400 text-sm mb-1">Total Orders</p>
+                            <p className="text-4xl font-bold text-gray-900 dark:text-white">{orders.length}</p>
+                            <p className="text-xs text-blue-500 mt-2">Lifetime</p>
                         </div>
-                        <div className="bg-slate-700/50 p-6 rounded-xl">
-                            <p className="text-slate-400 text-sm mb-1">Avg. Order Value</p>
-                            <p className="text-4xl font-bold text-white">${avgOrder.toFixed(2)}</p>
+                        <div className="bg-gray-50 dark:bg-slate-700/50 p-6 rounded-xl border border-gray-100 dark:border-transparent">
+                            <p className="text-gray-500 dark:text-slate-400 text-sm mb-1">Avg. Order Value</p>
+                            <p className="text-4xl font-bold text-gray-900 dark:text-white">${avgOrder.toFixed(2)}</p>
                         </div>
-                        <div className="bg-slate-700/50 p-6 rounded-xl">
-                            <p className="text-slate-400 text-sm mb-1">Pending Orders</p>
-                            <p className="text-4xl font-bold text-yellow-400">
+                        <div className="bg-gray-50 dark:bg-slate-700/50 p-6 rounded-xl border border-gray-100 dark:border-transparent">
+                            <p className="text-gray-500 dark:text-slate-400 text-sm mb-1">Pending Orders</p>
+                            <p className="text-4xl font-bold text-yellow-500 dark:text-yellow-400">
                                 {orders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').length}
                             </p>
                         </div>

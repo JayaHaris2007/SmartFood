@@ -35,15 +35,17 @@ const FoodCard = ({ item }) => {
                 <p className="text-gray-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">{item.description}</p>
 
                 <button
-                    onClick={() => !isRestaurant && addToCart(item)}
-                    disabled={isRestaurant}
-                    className={`w-full py-2.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 group/btn ${isRestaurant
+                    onClick={() => !isRestaurant && !item.isStoreClosed && addToCart(item)}
+                    disabled={isRestaurant || item.isStoreClosed}
+                    className={`w-full py-2.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 group/btn ${isRestaurant || item.isStoreClosed
                             ? 'bg-gray-200 dark:bg-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed'
                             : 'bg-gray-900 dark:bg-primary text-white hover:bg-black dark:hover:bg-red-600 active:scale-95'
                         }`}
                 >
                     {isRestaurant ? (
                         'Restaurant Account'
+                    ) : item.isStoreClosed ? (
+                        'Store Closed'
                     ) : (
                         <>
                             <Plus className="h-4 w-4 group-hover/btn:rotate-90 transition-transform" />

@@ -105,10 +105,22 @@ const RestaurantDetails = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Menu</h2>
 
+                {restaurant.isOpen === false && (
+                    <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-4 mb-6 flex items-center gap-3">
+                        <div className="p-2 bg-red-100 dark:bg-red-500/20 rounded-full">
+                            <Clock className="h-5 w-5 text-red-600 dark:text-red-400" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-red-700 dark:text-red-400">Restaurant is Currently Closed</h3>
+                            <p className="text-sm text-red-600/80 dark:text-red-400/80">You can browse the menu, but ordering is currently paused.</p>
+                        </div>
+                    </div>
+                )}
+
                 {menuItems.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${restaurant.isOpen === false ? 'opacity-75' : ''}`}>
                         {menuItems.map(item => (
-                            <FoodCard key={item.id} item={item} />
+                            <FoodCard key={item.id} item={{ ...item, isStoreClosed: restaurant.isOpen === false }} />
                         ))}
                     </div>
                 ) : (

@@ -23,6 +23,7 @@ import RestaurantLogin from './pages/auth/RestaurantLogin';
 import RestaurantDetails from './pages/RestaurantDetails';
 import UserProfile from './pages/UserProfile';
 import RestaurantProfile from './pages/RestaurantProfile';
+import RestaurantMenu from './pages/RestaurantMenu';
 
 const App = () => {
   return (
@@ -40,17 +41,17 @@ const App = () => {
 
                   {/* Dashboard exists outside the main layout for full screen effect */}
                   {/* Dashboard Routes */}
-                  <Route path="/dashboard" element={
-                    <ProtectedRoute roleRequired="restaurant">
-                      <Layout>
-                        <RestaurantDashboard />
-                      </Layout>
-                    </ProtectedRoute>
-                  } />
                   <Route path="/dashboard/orders" element={
                     <ProtectedRoute roleRequired="restaurant">
                       <Layout>
                         <RestaurantOrders />
+                      </Layout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/dashboard/menu" element={
+                    <ProtectedRoute roleRequired="restaurant">
+                      <Layout>
+                        <RestaurantMenu />
                       </Layout>
                     </ProtectedRoute>
                   } />
