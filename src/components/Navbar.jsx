@@ -71,7 +71,7 @@ const Navbar = () => {
 
                         {/* Cart Icon - Only for Customers */}
                         {userRole !== 'restaurant' && (
-                            <Link to="/cart" className="relative p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors mr-2 md:mr-0">
+                            <Link to="/cart" className="relative p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors mr-2 md:mr-0" aria-label="Cart">
                                 <ShoppingBag className="h-6 w-6 text-gray-700 dark:text-gray-200" />
                                 {totalItems > 0 && (
                                     <span className="absolute top-0 right-0 h-5 w-5 bg-primary text-white text-xs font-bold flex items-center justify-center rounded-full animate-bounce">
@@ -89,6 +89,7 @@ const Navbar = () => {
                                         to={userRole === 'restaurant' ? '/dashboard/profile' : '/profile'}
                                         className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 transition-colors"
                                         title="Profile"
+                                        aria-label="Profile"
                                     >
                                         <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-sm shadow-md">
                                             {currentUser.email[0].toUpperCase()}
@@ -115,6 +116,7 @@ const Navbar = () => {
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                            aria-label="Toggle mobile menu"
                         >
                             <MenuIcon className="h-6 w-6" />
                         </button>

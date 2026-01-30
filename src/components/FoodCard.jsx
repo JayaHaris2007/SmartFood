@@ -32,14 +32,15 @@ const FoodCard = ({ item }) => {
                     <span className="font-bold text-lg text-gray-900 dark:text-white">${item.price}</span>
                 </div>
 
-                <p className="text-gray-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">{item.description}</p>
+                <p className="text-gray-600 dark:text-slate-400 text-sm mb-4 line-clamp-2">{item.description}</p>
 
                 <button
                     onClick={() => !isRestaurant && !item.isStoreClosed && addToCart(item)}
                     disabled={isRestaurant || item.isStoreClosed}
+                    aria-label={`Add ${item.name} to cart`}
                     className={`w-full py-2.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 group/btn ${isRestaurant || item.isStoreClosed
-                            ? 'bg-gray-200 dark:bg-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed'
-                            : 'bg-gray-900 dark:bg-primary text-white hover:bg-black dark:hover:bg-red-600 active:scale-95'
+                        ? 'bg-gray-200 dark:bg-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed'
+                        : 'bg-gray-900 dark:bg-primary text-white hover:bg-black dark:hover:bg-red-600 active:scale-95'
                         }`}
                 >
                     {isRestaurant ? (

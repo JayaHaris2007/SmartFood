@@ -51,8 +51,11 @@ const Home = () => {
                         <div className="absolute inset-0 bg-black/60 z-10" />
                         <img
                             src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=80"
-                            alt="Hero"
+                            alt="Delicious variety of food on a table"
                             className="absolute inset-0 w-full h-full object-cover"
+                            fetchPriority="high"
+                            width="1600"
+                            height="800"
                         />
 
                         <div className="relative z-20 text-center text-white px-4 max-w-4xl mx-auto space-y-6">
@@ -78,6 +81,7 @@ const Home = () => {
 
                     {/* Features Grid */}
                     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h2 className="sr-only">Our Features</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             {[
                                 { icon: Clock, title: "Zero Wait Time", desc: "Our GPS tracking tells us when to start cooking so your food is fresh upon arrival." },
@@ -89,7 +93,7 @@ const Home = () => {
                                         <feature.icon className="h-6 w-6 text-primary" />
                                     </div>
                                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{feature.title}</h3>
-                                    <p className="text-gray-500 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
+                                    <p className="text-gray-600 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
                                 </div>
                             ))}
                         </div>
@@ -100,7 +104,7 @@ const Home = () => {
                         <div className="flex justify-between items-end mb-8">
                             <div>
                                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Popular Restaurants</h2>
-                                <p className="text-gray-500 dark:text-slate-400">Order from the best places near you</p>
+                                <p className="text-gray-600 dark:text-slate-400">Order from the best places near you</p>
                             </div>
                         </div>
 
