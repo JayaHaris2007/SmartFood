@@ -47,6 +47,7 @@ const MapPage = () => {
                     zoom={13}
                     markers={restaurantMarkers}
                     routeTo={routeTo}
+                    allowScrollZoom={true}
                 />
             </div>
         </div>

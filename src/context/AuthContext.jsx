@@ -4,9 +4,11 @@ import {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    signInWithPopup
+    signInWithPopup,
+    sendEmailVerification,
+    deleteUser
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../lib/firebase';
 
 const AuthContext = createContext();
@@ -20,6 +22,7 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         let mounted = true;
+        let unsubscribeUser = null; // Store user listener
 
         // Safety timeout to prevent infinite white screen
         const safetyTimeout = setTimeout(() => {
@@ -32,9 +35,15 @@ export const AuthProvider = ({ children }) => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (!mounted) return;
 
+            // Unsubscribe from previous user listener if it exists
+            if (unsubscribeUser) {
+                unsubscribeUser();
+                unsubscribeUser = null;
+            }
+
             if (user) {
                 // Listen for real-time user updates
-                const unsubscribeUser = onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
+                unsubscribeUser = onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
                     if (mounted) {
                         if (docSnapshot.exists()) {
                             const data = docSnapshot.data();
@@ -68,6 +77,9 @@ export const AuthProvider = ({ children }) => {
             mounted = false;
             clearTimeout(safetyTimeout);
             unsubscribe();
+            if (unsubscribeUser) {
+                unsubscribeUser();
+            }
         };
     }, []);
 
@@ -92,6 +104,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         await setDoc(doc(db, "users", user.uid), userData);
+        await sendEmailVerification(user);
         setUserRole(role);
         return userCredential;
     };
@@ -130,8 +143,37 @@ export const AuthProvider = ({ children }) => {
         return result;
     };
 
-    const logoutFn = () => {
-        return signOut(auth);
+    const logoutFn = async () => {
+        await signOut(auth);
+        setCurrentUser(null);
+        setUserRole(null);
+        setLoading(false);
+    };
+
+    const resendVerificationEmail = () => {
+        if (currentUser) {
+            return sendEmailVerification(currentUser);
+        }
+    };
+
+    const deleteAccount = async () => {
+        if (!currentUser) return;
+
+        try {
+            // Delete user document from Firestore
+            await deleteDoc(doc(db, "users", currentUser.uid));
+
+            // Delete user from Firebase Auth
+            await deleteUser(currentUser);
+
+            setCurrentUser(null);
+            setUserRole(null);
+            setLoading(false);
+            return true;
+        } catch (error) {
+            console.error("Error deleting account:", error);
+            throw error;
+        }
     };
 
     const value = {
@@ -141,6 +183,8 @@ export const AuthProvider = ({ children }) => {
         register: registerFn,
         loginWithGoogle,
         logout: logoutFn,
+        deleteAccount,
+        resendVerificationEmail,
         loading
     };
 

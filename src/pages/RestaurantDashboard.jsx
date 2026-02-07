@@ -29,16 +29,37 @@ const RestaurantDashboard = () => {
         );
 
         const unsubscribeOrders = onSnapshot(qOrders, (snapshot) => {
-            const orders = snapshot.docs.map(doc => doc.data());
-            const revenue = orders.reduce((acc, order) => acc + (order.totalPrice || 0), 0);
-            const active = orders.filter(o => !['Completed', 'Cancelled'].includes(o.status)).length;
+            const allOrders = snapshot.docs.map(doc => doc.data());
+
+            // Calculate REVENUE and TOTAL from ALL orders (including hidden/deleted)
+            const revenue = allOrders
+                .filter(o => o.status === 'Completed')
+                .reduce((acc, order) => acc + (order.totalPrice || 0), 0);
+
+            const total = allOrders.length;
+
+            // Active: Not Completed, Not Cancelled, AND Not Hidden (so they still show up in list if not hidden)
+            // If an order is hidden, it shouldn't be counted as "active" typically, or maybe it should?
+            // Usually hidden = deleted from view, so shouldn't be active. 
+            // Only orders that are NOT hidden should be considered for "Active" count.
+            const visibleOrders = allOrders.filter(o => !o.hiddenByRestaurant);
+            const active = visibleOrders.filter(o => !['Completed', 'Cancelled'].includes(o.status)).length;
+
+            const newStats = {
+                totalRevenue: revenue,
+                activeOrders: active,
+                totalOrders: total
+            };
 
             setStats(prev => ({
                 ...prev,
-                totalRevenue: revenue,
-                activeOrders: active,
-                totalOrders: orders.length
+                ...newStats
             }));
+
+            // Store counts in Firestore as requested
+            updateDoc(doc(db, "users", currentUser.uid), {
+                stats: newStats
+            }).catch(err => console.error("Error saving stats:", err));
         });
 
         // Fetch Menu Items count
@@ -123,7 +144,7 @@ const RestaurantDashboard = () => {
                 {/* Stats Ledger */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                     {/* Revenue Card */}
-                    <div className="group relative bg-white dark:bg-slate-800 rounded-3xl p-6 border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                    <Link to="/dashboard/income" className="group relative bg-white dark:bg-slate-800 rounded-3xl p-6 border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full -mr-10 -mt-10 group-hover:scale-110 transition-transform duration-500" />
                         <div className="relative z-10">
                             <div className="flex items-center justify-between mb-8">
@@ -135,11 +156,11 @@ const RestaurantDashboard = () => {
                             <div>
                                 <p className="text-gray-500 dark:text-slate-400 font-medium mb-1">Total Revenue</p>
                                 <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
-                                    ${stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    ₹{stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </h3>
                             </div>
                         </div>
-                    </div>
+                    </Link>
 
                     {/* Active Orders Card */}
                     <div className="group relative bg-white dark:bg-slate-800 rounded-3xl p-6 border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
@@ -222,7 +243,7 @@ const RestaurantDashboard = () => {
                                 <Utensils className="h-6 w-6" />
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-2">Manage Menu</h3>
-                            <p className="text-gray-300 text-sm mb-4 line-clamp-2">Add new mouth-watering dishes, update prices, or edit your offerings.</p>
+                            <p className="text-gray-300 text-sm mb-4 line-clamp-2">Add new dishes, update prices, or edit offerings.</p>
                             <span className="inline-flex items-center gap-2 text-white font-bold text-sm bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 group-hover:bg-primary group-hover:border-primary transition-colors">
                                 Go to Menu <ArrowRight className="h-4 w-4" />
                             </span>
@@ -242,7 +263,7 @@ const RestaurantDashboard = () => {
                                 <ShoppingBag className="h-6 w-6" />
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-2">View Orders</h3>
-                            <p className="text-gray-300 text-sm mb-4 line-clamp-2">Track incoming orders, update status, and manage active deliveries.</p>
+                            <p className="text-gray-300 text-sm mb-4 line-clamp-2">Track incoming orders and manage deliveries.</p>
                             <span className="inline-flex items-center gap-2 text-white font-bold text-sm bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 group-hover:bg-blue-600 group-hover:border-blue-500 transition-colors">
                                 Track Orders <ArrowRight className="h-4 w-4" />
                             </span>

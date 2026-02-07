@@ -25,6 +25,8 @@ const RestaurantDetails = lazy(() => import('./pages/RestaurantDetails'));
 const UserProfile = lazy(() => import('./pages/UserProfile'));
 const RestaurantProfile = lazy(() => import('./pages/RestaurantProfile'));
 const RestaurantMenu = lazy(() => import('./pages/RestaurantMenu'));
+const EmailVerificationPending = lazy(() => import('./pages/auth/EmailVerificationPending'));
+import EmailNotVerifiedRoute from './components/EmailNotVerifiedRoute';
 
 const App = () => {
   return (
@@ -40,6 +42,11 @@ const App = () => {
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/restaurant-login" element={<RestaurantLogin />} />
+                    <Route path="/verify-email" element={
+                      <EmailNotVerifiedRoute>
+                        <EmailVerificationPending />
+                      </EmailNotVerifiedRoute>
+                    } />
 
                     {/* Dashboard exists outside the main layout for full screen effect */}
                     {/* Dashboard Routes */}

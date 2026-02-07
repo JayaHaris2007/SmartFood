@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import MapComponent from '../../components/MapComponent';
-import { ChefHat, MapPin } from 'lucide-react';
+import { ChefHat, MapPin, Eye, EyeOff } from 'lucide-react';
 
 const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [name, setName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [role, setRole] = useState('user'); // Default to 'user'
@@ -32,9 +34,10 @@ const Register = () => {
         try {
             setError('');
             setLoading(true);
-            setLoading(true);
-            await register(email, password, role, name, phoneNumber, selectedLocation); // Pass selected role and new fields
-            navigate('/');
+            await register(email, password, role, name, phoneNumber, selectedLocation);
+            // Alert user to check email
+            alert("Account created! Please check your email for verification.");
+            navigate('/verify-email');
         } catch (err) {
             setError('Failed to create an account.');
         }
@@ -170,16 +173,27 @@ const Register = () => {
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
                                 Password
                             </label>
-                            <div className="mt-1">
+                            <div className="mt-1 relative">
                                 <input
                                     id="password"
                                     name="password"
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary dark:bg-slate-700 dark:text-white sm:text-sm"
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary dark:bg-slate-700 dark:text-white sm:text-sm pr-10"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-5 w-5" aria-hidden="true" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" aria-hidden="true" />
+                                    )}
+                                </button>
                             </div>
                         </div>
 
@@ -187,16 +201,27 @@ const Register = () => {
                             <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
                                 Confirm Password
                             </label>
-                            <div className="mt-1">
+                            <div className="mt-1 relative">
                                 <input
                                     id="confirm-password"
                                     name="confirm-password"
-                                    type="password"
+                                    type={showConfirmPassword ? "text" : "password"}
                                     required
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary dark:bg-slate-700 dark:text-white sm:text-sm"
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary dark:bg-slate-700 dark:text-white sm:text-sm pr-10"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                                >
+                                    {showConfirmPassword ? (
+                                        <EyeOff className="h-5 w-5" aria-hidden="true" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" aria-hidden="true" />
+                                    )}
+                                </button>
                             </div>
                         </div>
 

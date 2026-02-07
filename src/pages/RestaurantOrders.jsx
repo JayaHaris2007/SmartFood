@@ -20,10 +20,12 @@ const RestaurantOrders = () => {
         );
 
         const unsubscribeOrders = onSnapshot(qSimpleOrders, (snapshot) => {
-            const loadedOrders = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            const loadedOrders = snapshot.docs
+                .map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }))
+                .filter(order => !order.hiddenByRestaurant); // Filter out soft-deleted orders
 
             // Client-side sort to avoid index issues
             loadedOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -205,7 +207,9 @@ const RestaurantOrders = () => {
                             </button>
                             <button
                                 onClick={async () => {
-                                    await deleteDoc(doc(db, "orders", orderToDelete.id));
+                                    await updateDoc(doc(db, "orders", orderToDelete.id), {
+                                        hiddenByRestaurant: true
+                                    });
                                     setOrderToDelete(null);
                                 }}
                                 className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors"

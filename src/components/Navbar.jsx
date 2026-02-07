@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingBag, MapPin, ChefHat, Sun, Moon, Menu as MenuIcon } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
@@ -11,11 +11,21 @@ const Navbar = () => {
     const { currentUser, userRole, logout } = useAuth();
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const navigate = useNavigate();
 
     // Close mobile menu when route changes
     React.useEffect(() => {
         setIsMenuOpen(false);
     }, [location]);
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/login');
+        } catch (error) {
+            console.error("Failed to logout", error);
+        }
+    };
 
     const isActive = (path) => {
         return location.pathname === path
@@ -96,7 +106,7 @@ const Navbar = () => {
                                         </div>
                                     </Link>
                                     <button
-                                        onClick={logout}
+                                        onClick={handleLogout}
                                         className="px-4 py-2 text-sm font-bold text-gray-700 dark:text-gray-300 hover:text-red-500 transition-colors"
                                     >
                                         Logout
@@ -153,7 +163,7 @@ const Navbar = () => {
                                         <span className="text-gray-900 dark:text-white font-medium">{currentUser.name || currentUser.email}</span>
                                     </Link>
                                     <button
-                                        onClick={logout}
+                                        onClick={handleLogout}
                                         className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10"
                                     >
                                         Logout

@@ -58,6 +58,7 @@ const RestaurantLocation = () => {
                             center={restaurantLocation}
                             zoom={14}
                             onError={(msg) => setToast({ message: msg, type: 'error' })}
+                            allowScrollZoom={true}
                         />
                     </div>
 

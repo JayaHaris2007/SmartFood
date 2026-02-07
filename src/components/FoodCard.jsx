@@ -29,7 +29,7 @@ const FoodCard = ({ item }) => {
                         <p className="text-xs font-medium text-primary uppercase tracking-wider">{item.category}</p>
                         <h3 className="font-bold text-lg text-gray-800 dark:text-white line-clamp-1">{item.name}</h3>
                     </div>
-                    <span className="font-bold text-lg text-gray-900 dark:text-white">${item.price}</span>
+                    <span className="font-bold text-lg text-gray-900 dark:text-white">₹{item.price}</span>
                 </div>
 
                 <p className="text-gray-600 dark:text-slate-400 text-sm mb-4 line-clamp-2">{item.description}</p>

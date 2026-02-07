@@ -2,6 +2,7 @@ import React from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import ActiveOrderTracker from './ActiveOrderTracker';
+import Chatbot from './Chatbot';
 
 const Layout = ({ children }) => {
     return (
@@ -17,6 +18,7 @@ const Layout = ({ children }) => {
                     {children}
                 </main>
                 <ActiveOrderTracker />
+                <Chatbot />
                 <Footer />
             </div>
         </div>

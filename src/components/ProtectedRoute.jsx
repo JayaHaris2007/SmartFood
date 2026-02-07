@@ -20,12 +20,19 @@ const ProtectedRoute = ({ children, roleRequired }) => {
         return <Navigate to="/login" />;
     }
 
+    // If user is logged in but email is not verified, redirect to verification page
+    if (!currentUser.emailVerified) {
+        return <Navigate to="/verify-email" />;
+    }
+
     // If a specific role is required (e.g., 'restaurant' for dashboard)
     if (roleRequired && userRole !== roleRequired) {
         // If asking for restaurant but user is just a user, redirect to home
         if (roleRequired === 'restaurant') {
             return <Navigate to="/" />;
         }
+        // For any other role mismatch, redirect to home
+        return <Navigate to="/" />;
     }
 
     return children;

@@ -6,7 +6,7 @@ import { User, Mail, Phone, Package, Calendar, MapPin, Clock } from 'lucide-reac
 import Toast from '../components/Toast';
 
 const UserProfile = () => {
-    const { currentUser } = useAuth();
+    const { currentUser, resendVerificationEmail } = useAuth();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
@@ -118,6 +118,36 @@ const UserProfile = () => {
                             )}
                         </div>
 
+                        {/* Email Verification Component */}
+                        <div className="flex flex-col items-center md:items-end gap-2">
+                            {!currentUser.emailVerified && (
+                                <div className="flex flex-col items-end gap-2">
+                                    <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20">
+                                        Unverified Email
+                                    </span>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await resendVerificationEmail();
+                                                setToast({ message: 'Verification email sent!', type: 'success' });
+                                            } catch (error) {
+                                                console.error(error);
+                                                setToast({ message: 'Failed to send email. Try again later.', type: 'error' });
+                                            }
+                                        }}
+                                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                                    >
+                                        Resend Verification Email
+                                    </button>
+                                </div>
+                            )}
+                            {currentUser.emailVerified && (
+                                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/20">
+                                    Verified
+                                </span>
+                            )}
+                        </div>
+
                         <div className="flex gap-3">
                             {isEditing ? (
                                 <>
@@ -178,7 +208,7 @@ const UserProfile = () => {
                                             <h3 className="font-bold text-lg text-gray-900 dark:text-white">Order #{order.id.slice(-6)}</h3>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">${order.total?.toFixed(2)}</p>
+                                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">₹{order.total?.toFixed(2)}</p>
                                             <p className="text-xs text-gray-500 dark:text-slate-500">{order.items?.length} items</p>
                                         </div>
                                     </div>

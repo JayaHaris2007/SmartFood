@@ -131,7 +131,7 @@ const RestaurantMenu = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-500 dark:text-slate-400 mb-1">Price ($)</label>
+                                        <label className="block text-sm font-medium text-gray-500 dark:text-slate-400 mb-1">Price (₹)</label>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -190,7 +190,7 @@ const RestaurantMenu = () => {
                                                 <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover bg-gray-200 dark:bg-slate-600" />
                                                 <div>
                                                     <h3 className="font-medium text-gray-900 dark:text-slate-200">{item.name}</h3>
-                                                    <p className="text-xs text-gray-500 dark:text-slate-500">${item.price} • {item.category}</p>
+                                                    <p className="text-xs text-gray-500 dark:text-slate-500">₹{item.price} • {item.category}</p>
                                                 </div>
                                             </div>
                                             <button

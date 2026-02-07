@@ -47,8 +47,10 @@ const RecenterMap = ({ center }) => {
 
 import RoutingControl from './RoutingControl';
 
-const MapComponent = ({ center, zoom = 13, markers = [], isEditable = false, onLocationSelect, selectedLocation, routeTo, onError }) => {
+const MapComponent = ({ center, zoom = 13, markers = [], isEditable = false, onLocationSelect, selectedLocation, routeTo, onError, allowScrollZoom = false }) => {
     const { isDarkMode } = useTheme();
+    // ... (lines 52-148 remain unchanged, but ReplaceContent needs to be exact match, so I will start replacement from MapComponent definition line)
+
     // Default to London if no center provided initially
     const defaultCenter = [51.505, -0.09];
 
@@ -146,7 +148,7 @@ const MapComponent = ({ center, zoom = 13, markers = [], isEditable = false, onL
                 }
                 /* Hide standard zoom controls if we want custom ones, but keeping them for now */
             `}</style>
-            <MapContainer center={mapCenter} zoom={zoom} scrollWheelZoom={true} className="h-full w-full z-0">
+            <MapContainer center={mapCenter} zoom={zoom} scrollWheelZoom={allowScrollZoom} zoomControl={false} className="h-full w-full z-0">
                 <RecenterMap center={mapCenter} />
                 {/* Premium Tiles: CartoDB Voyager */}
                 <TileLayer
