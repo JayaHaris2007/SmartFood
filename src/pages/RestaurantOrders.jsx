@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { db } from '../lib/firebase';
 import { collection, query, where, onSnapshot, orderBy, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 
-import { Clock, Bell, Trash2 } from 'lucide-react';
+import { Clock, Bell, Trash2, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { updateDailyStats } from '../utils/statsUtils';
 
 const RestaurantOrders = () => {
     const [orders, setOrders] = useState([]);
@@ -113,15 +114,31 @@ const RestaurantOrders = () => {
                                                     Delete
                                                 </button>
                                             ) : (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setOrderToCancel(order);
-                                                    }}
-                                                    className="px-3 py-1 bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/20 dark:hover:bg-red-500/30 rounded-lg text-xs font-semibold border border-red-500/20 dark:border-red-500/30 transition-colors"
-                                                >
-                                                    Cancel
-                                                </button>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            updateDoc(doc(db, "orders", order.id), {
+                                                                status: 'Completed'
+                                                            });
+                                                            // Update stats separate collection
+                                                            const total = order.totalPrice || order.total || 0;
+                                                            updateDailyStats(currentUser.uid, total, new Date());
+                                                        }}
+                                                        className="px-3 py-1 bg-green-500/10 dark:bg-green-500/20 text-green-600 dark:text-green-400 hover:bg-green-500/20 dark:hover:bg-green-500/30 rounded-lg text-xs font-semibold border border-green-500/20 dark:border-green-500/30 transition-colors"
+                                                    >
+                                                        Scale
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setOrderToCancel(order);
+                                                        }}
+                                                        className="px-3 py-1 bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/20 dark:hover:bg-red-500/30 rounded-lg text-xs font-semibold border border-red-500/20 dark:border-red-500/30 transition-colors"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     </div>

@@ -22,44 +22,42 @@ const RestaurantDashboard = () => {
 
         if (!currentUser) return;
 
-        // Fetch Orders for stats
-        const qOrders = query(
-            collection(db, "orders"),
+        // 1. Fetch Stats for Revenue and Total Orders (Consistent with Income Page)
+        const qStats = query(
+            collection(db, "restaurant_stats"),
             where("restaurantId", "==", currentUser.uid)
         );
 
-        const unsubscribeOrders = onSnapshot(qOrders, (snapshot) => {
-            const allOrders = snapshot.docs.map(doc => doc.data());
+        const unsubscribeStats = onSnapshot(qStats, (snapshot) => {
+            let totalRev = 0;
+            let totalOrd = 0;
 
-            // Calculate REVENUE and TOTAL from ALL orders (including hidden/deleted)
-            const revenue = allOrders
-                .filter(o => o.status === 'Completed')
-                .reduce((acc, order) => acc + (order.totalPrice || 0), 0);
-
-            const total = allOrders.length;
-
-            // Active: Not Completed, Not Cancelled, AND Not Hidden (so they still show up in list if not hidden)
-            // If an order is hidden, it shouldn't be counted as "active" typically, or maybe it should?
-            // Usually hidden = deleted from view, so shouldn't be active. 
-            // Only orders that are NOT hidden should be considered for "Active" count.
-            const visibleOrders = allOrders.filter(o => !o.hiddenByRestaurant);
-            const active = visibleOrders.filter(o => !['Completed', 'Cancelled'].includes(o.status)).length;
-
-            const newStats = {
-                totalRevenue: revenue,
-                activeOrders: active,
-                totalOrders: total
-            };
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                totalRev += (data.revenue || 0);
+                totalOrd += (data.ordersCount || 0);
+            });
 
             setStats(prev => ({
                 ...prev,
-                ...newStats
+                totalRevenue: totalRev,
+                totalOrders: totalOrd
             }));
+        });
 
-            // Store counts in Firestore as requested
-            updateDoc(doc(db, "users", currentUser.uid), {
-                stats: newStats
-            }).catch(err => console.error("Error saving stats:", err));
+        // 2. Fetch Active Orders (Real-time pending orders)
+        // Active: Not Completed, Not Cancelled
+        const qActiveOrders = query(
+            collection(db, "orders"),
+            where("restaurantId", "==", currentUser.uid),
+            where("status", "in", ['Pending', 'Preparing', 'Ready', 'On the way', 'Arrived'])
+        );
+
+        const unsubscribeActive = onSnapshot(qActiveOrders, (snapshot) => {
+            setStats(prev => ({
+                ...prev,
+                activeOrders: snapshot.size
+            }));
         });
 
         // Fetch Menu Items count
@@ -77,7 +75,8 @@ const RestaurantDashboard = () => {
 
         return () => {
             clearInterval(timer);
-            unsubscribeOrders();
+            unsubscribeStats();
+            unsubscribeActive();
             unsubscribeMenu();
         };
     }, [currentUser]);

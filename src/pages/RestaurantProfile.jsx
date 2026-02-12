@@ -124,7 +124,6 @@ const RestaurantProfile = () => {
                             </button>
                         </div>
 
-                        {/* Delete Account */}
                         <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-red-100 dark:border-red-900/20 shadow-sm">
                             <h2 className="text-lg font-bold text-red-500 dark:text-red-400 mb-2">Delete Account</h2>
                             <p className="text-gray-500 dark:text-slate-400 text-sm mb-4">

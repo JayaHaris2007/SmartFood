@@ -10,6 +10,11 @@ const RestaurantDetails = () => {
     const [restaurant, setRestaurant] = useState(null);
     const [menuItems, setMenuItems] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState('All');
+
+    const filteredItems = menuItems.filter(item =>
+        selectedCategory === 'All' ? true : item.category === selectedCategory
+    );
 
     useEffect(() => {
         const fetchRestaurantAndMenu = async () => {
@@ -105,6 +110,22 @@ const RestaurantDetails = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Menu</h2>
 
+                {/* Category Filter */}
+                <div className="flex overflow-x-auto pb-4 gap-3 mb-6 custom-scrollbar">
+                    {['All', 'Starter', 'Main Course', 'Dessert', 'Drinks'].map(category => (
+                        <button
+                            key={category}
+                            onClick={() => setSelectedCategory(category)}
+                            className={`px-5 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all ${selectedCategory === category
+                                ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                                : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700'
+                                }`}
+                        >
+                            {category}
+                        </button>
+                    ))}
+                </div>
+
                 {restaurant.isOpen === false && (
                     <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-4 mb-6 flex items-center gap-3">
                         <div className="p-2 bg-red-100 dark:bg-red-500/20 rounded-full">
@@ -117,16 +138,16 @@ const RestaurantDetails = () => {
                     </div>
                 )}
 
-                {menuItems.length > 0 ? (
+                {filteredItems.length > 0 ? (
                     <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${restaurant.isOpen === false ? 'opacity-75' : ''}`}>
-                        {menuItems.map(item => (
+                        {filteredItems.map(item => (
                             <FoodCard key={item.id} item={{ ...item, isStoreClosed: restaurant.isOpen === false }} />
                         ))}
                     </div>
                 ) : (
                     <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700">
                         <p className="text-gray-500 dark:text-slate-400 text-lg">
-                            No menu items added yet.
+                            No {selectedCategory !== 'All' ? selectedCategory.toLowerCase() : ''} items found.
                         </p>
                     </div>
                 )}
