@@ -1,7 +1,7 @@
 import React from 'react';
 import { useOrder } from '../context/OrderContext';
 import { useNavigate } from 'react-router-dom';
-import { Navigation, MapPin, CheckCircle, XCircle } from 'lucide-react';
+import { Navigation, MapPin, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { collection, query, where, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -176,6 +176,17 @@ const ActiveOrderTracker = () => {
                             className="w-full py-3 bg-primary hover:bg-red-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-primary/20"
                         >
                             Simulate Move
+                        </button>
+
+                        <button
+                            onClick={async () => {
+                                const { downloadInvoice } = await import('../utils/invoiceGenerator');
+                                downloadInvoice(activeOrder);
+                            }}
+                            className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-500/20"
+                        >
+                            <FileText className="h-4 w-4" />
+                            Invoice
                         </button>
 
                         <button

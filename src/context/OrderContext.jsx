@@ -77,25 +77,57 @@ export const OrderProvider = ({ children }) => {
         });
     };
 
+
+
+    // RE-IMPLEMENTING placeOrder to properly handle the async operations and ID
     const placeOrder = async (items, total) => {
         if (!currentUser) return;
 
         const restaurantId = items.length > 0 ? items[0].restaurantId : null;
 
-        await addDoc(collection(db, "orders"), {
-            userId: currentUser.uid,
-            userEmail: currentUser.email,
-            userName: currentUser.name || currentUser.displayName || 'Guest',
-            customerName: currentUser.name || currentUser.displayName || 'Guest',
-            items,
-            total,
-            status: 'On the way',
-            distanceKm: 5.0,
-            isApproaching: false,
-            createdAt: new Date().toISOString(),
-            restaurantId: restaurantId,
-            userDismissed: false // Initialize as not dismissed
-        });
+        try {
+            const docRef = await addDoc(collection(db, "orders"), {
+                userId: currentUser.uid,
+                userEmail: currentUser.email,
+                userName: currentUser.name || currentUser.displayName || 'Guest',
+                customerName: currentUser.name || currentUser.displayName || 'Guest',
+                items,
+                total,
+                status: 'On the way',
+                distanceKm: 5.0,
+                isApproaching: false,
+                createdAt: new Date().toISOString(),
+                restaurantId: restaurantId,
+                userDismissed: false
+            });
+
+            // Construct order object for invoice
+            const orderForInvoice = {
+                id: docRef.id,
+                userId: currentUser.uid,
+                userEmail: currentUser.email,
+                customerName: currentUser.name || currentUser.displayName || 'Guest',
+                items,
+                total,
+                createdAt: new Date().toISOString()
+            };
+
+            // Send Email (Fire and Forget)
+            // Import dynamically to avoid circular dependencies if any, or just standard import at top.
+            // For now, assuming standard import at top of file. 
+            // Send Email (Fire and Forget)
+            import('../utils/emailService').then(({ sendInvoiceEmail }) => {
+                sendInvoiceEmail(orderForInvoice);
+            }).catch(err => console.error("Failed to send email", err));
+
+            // We can also trigger a download automatically if desired, but that might be annoying.
+            // import('../utils/invoiceGenerator').then(({ downloadInvoice }) => {
+            //    downloadInvoice(orderForInvoice);
+            // });
+
+        } catch (error) {
+            console.error("Error comparing order:", error);
+        }
     };
 
     const clearOrder = async () => {
