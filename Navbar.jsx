@@ -1,0 +1,1 @@
+<div className="flex items-center px-3 gap-3 mb-3 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg p-2 transition-colors">
